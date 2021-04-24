@@ -60,7 +60,7 @@ def open_tcp_connection():
     
     #sent info client to server
     timenow =  str(datetime.datetime.now())
-    msg = {'IP': "127.0.0.1", 'NAME': "Sang", 'UDP_PORT': 4001, 'TIME':timenow }
+    msg = {'IP': "127.0.0.1", 'NAME': "Sang", 'UDP_PORT': 4002, 'TIME':timenow }
     message = pickle.dumps(msg)
     clientSocket.send(message)
     # open_udp_connection()
@@ -82,8 +82,8 @@ def open_tcp_connection():
             print('Interval in tcp = ' + str(interval))
             time.sleep(interval)
 
-           
-
+            
+    
     
 # def open_udp_connection():
 #     global interval
@@ -103,7 +103,7 @@ def open_tcp_connection():
 def udpConnection():
     global interval
     udpSocket = socket(AF_INET, SOCK_DGRAM)
-    udpSocket.bind(('', 4001))
+    udpSocket.bind(('', 4002))
     while True:
         control, serverAddr = udpSocket.recvfrom(2048)
         print('receive udp success')
