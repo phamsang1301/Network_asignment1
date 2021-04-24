@@ -65,7 +65,7 @@ def open_tcp_connection():
     # open_udp_connection()
     
 
-    recive_msg_from_server = clientSocket.recv(1024)
+    recive_msg_from_server = clientSocket.recv(2048)
     m2 =  pickle.loads(recive_msg_from_server)
     ## if success, sent computer info to server
     if (m2['STATUS'] == "Success"):
@@ -78,7 +78,7 @@ def open_tcp_connection():
             
             clientSocket.send(send_infos)
             print("Sleep...")
-            print('interval in tcp = ' + str(interval))
+            print('Interval in tcp = ' + str(interval))
             time.sleep(interval)
         
             
@@ -90,19 +90,16 @@ def open_udp_connection():
     udpSocket.bind((serverName, 4001))
     control = '';
     while True:
-        control, serverAddr = udpSocket.recvfrom(1024)
-        if (control != ''):
-                
-            print('receive udp success')
-            ctrl = pickle.loads(control)
-            serverPort = ctrl['TCP_PORT']
-            interval = ctrl['INTERVAL']
-            print('Changed parameter!')
-            print('New Interval: ' + str(interval))
-            print('serverPort: ' + str(serverPort))
-        control = '';
+        control, serverAddr = udpSocket.recvfrom(2048)
+        print('receive udp success')
+        ctrl = pickle.loads(control)
+        serverPort = ctrl['TCP_PORT']
+        interval = ctrl['INTERVAL']
+        print('Changed parameter!')
+        print('New Interval: ' + str(interval))
+        print('ServerPort: ' + str(serverPort))
         
-threads = []
+# threads = []
 
 # newThread = Thread(target=open_tcp_connection, args=())
 # newThread.start()
@@ -111,6 +108,8 @@ threads = []
 
 if __name__ == "__main__":
     open_tcp_connection()
+    open_udp_connection()
+    
     
                 
 
