@@ -5,32 +5,67 @@ import pickle
 import tkinter as tk
 
 
-# def createServer(host,port):
-#     Server = socket(AF_INET, SOCK_STREAM)
-#     Server.bind((host,port))
-#     Server.listen(40)
-#     return Server
 
 def clientConnection(connectionSocket,id):
     global serverPort
+
+    def udpConnection():
+        udpSocket = socket(AF_INET, SOCK_DGRAM)
+        mess = {"port": 4000, "interval": 2}
+        control = pickle.dumps(mess)
+        # control = 'TCP_PORT 4000\nINTERVAL 2\n'
+        udpSocket.sendto(control, ('localhost', UDP_Port))
+    def newThread():
+        newThread2 = Thread(target=udpConnection, args=())
+        newThread2.start()
+        clients.append(newThread2)
+
     try:
         #Recive client's info
         message = connectionSocket.recv(
                 2048)
         #turn message into object
         msg = pickle.loads(message)
+        UDP_Port = msg['UDP_PORT']
 
+        
         #Create labels for client
         newLabel = tk.Label(text='Client ' + str(id))
         labels.append(newLabel)
         newLabel.grid(row=0, column=id)
+        
+        newLabelInterval = tk.Label(text='Interval')
+        labelsInterval.append(newLabelInterval)
+        newLabelInterval.grid(row=1, column=id, sticky = 'w', pady = 2)
+        
+        newInterval =tk.Entry(width=10)
+        intervals.append(newInterval)
+        newInterval.grid(row=1, column=id)
+        
+        
+        newLabelPort = tk.Label(text='Port')
+        labelsPort.append(newLabelPort)
+        newLabelPort.grid(row=2, column=id,sticky = 'w', pady = 2 )
+        
+        newPort =tk.Entry(width=10)
+        ports.append(newPort)
+        newPort.grid(row=2, column=id)
+        
+        newButton = tk.Button(text="Sent",  command=newThread)
+
+        buttons.append(newButton)
+        newButton.grid(row=3, column=id)
+        
+        
         window.columnconfigure(id, weight=1)
+        
         
         #Return message to client (success or not) 
         #Note: Check error here
         message_to_client = {'STATUS': "Success",'ID': id,'INTERVAL': 5, 'TCP_PORT': 4000 }
         msg_to_client = pickle.dumps(message_to_client)
         connectionSocket.send(msg_to_client)
+
         
         #recive and update client's computer info
         while True:
@@ -38,10 +73,14 @@ def clientConnection(connectionSocket,id):
                 2048)
             #turn info into object
             inf = pickle.loads(info)
-
             # display client  and client's computer info
             labels[id]["text"] = '----------------------\n'
             labels[id]["text"] += 'Client ' + str(id) + '\n \n'
+            labels[id]["text"] += 'Name: ' + msg['NAME'] + ' \n'
+            labels[id]["text"] += 'IP: ' + msg['IP'] + '\n '
+            labels[id]["text"] += 'Port: ' + str(msg['UDP_PORT']) + '\n'
+            labels[id]["text"] += 'Time: ' + str(msg['TIME']) + '\n '
+
             labels[id]["text"] += "CPU: "+ str(inf['CPU']) + " Degree" + '\n \n'
             labels[id]["text"] += "Memory: "  + '\n'
             labels[id]["text"] += "Total: " + str(inf['MEMORY']['Total']) + '\n'
@@ -56,7 +95,7 @@ def clientConnection(connectionSocket,id):
             labels[id]["text"] += '----------------------\n'
     except:
         connectionSocket.close()
-
+ 
 
 def tcpConnection():
     global serverSocket, clients, labels, id
@@ -127,31 +166,34 @@ def create_TCP_connection():
 #     udpSocket = socket(AF_INET, SOCK_DGRAM)
 #     udpSocket.bind(('', 4001))
 
-def send_new_para_to_client(interval, tcp_port):
-    udpSocket = socket(AF_INET, SOCK_DGRAM)
-    socket.bind(('', 4000))
-    socket.listen(40)
-    connectionSocket, addr = socket.accept()
-    if (True): 
-        message_to_client = {'INTERVAL': interval, 'TCP_PORT': tcp_port }
-        msg_to_client = pickle.dumps(message_to_client)
-        connectionSocket.send(msg_to_client)
+
+# def send_new_para_to_client(interval, tcp_port):
+#     udpSocket = socket(AF_INET, SOCK_DGRAM)
+#     socket.bind(('', 4000))
+#     # socket.listen(40)
+#     connectionSocket, addr = socket.accept()
+#     if (True): 
+#         # message_to_client = {'INTERVAL': interval, 'TCP_PORT': tcp_port }
+#         # msg_to_client = pickle.dumps(message_to_client)
+#         msgFromServer       = "Hello UDP Client"
+#         bytesToSend         = str.encode(msgFromServer)
+#         udpSocket.sendto(bytesToSend,('localhost', 4001) )
 
 
-# newThread2 = Thread(target=udpConnection, args=())
-# newThread2.start()
-# threads.append(newThread2)
+# def udpConnection():
+#     udpSocket = socket(AF_INET, SOCK_DGRAM)
+#     control = 'TCP_PORT 4000\nINTERVAL 2\n'
+#     udpSocket.sendto(control.encode(), ('localhost', 4001))
 
-# if __name__ == "__main__":
-#     Server = createServer('',4000)   
-#     create_TCP_connection(Server)
-     
-     
 threads = []
 clients = []
 labels = []
+intervals = []
+ports = []
+buttons  = []
+labelsInterval = []
+labelsPort  =  []
 id = 0
-
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverPort = 4000
 serverSocket.bind(('', serverPort))
@@ -160,8 +202,12 @@ newThread = Thread(target=tcpConnection, args=())
 newThread.start()
 threads.append(newThread)
 
-window = tk.Tk()
+# newThread2 = Thread(target=udpConnection, args=())
+# newThread2.start()
+# clients.append(newThread2)
 
+
+window = tk.Tk()
 window.rowconfigure(0, weight=1)
 window.mainloop()
 
