@@ -11,7 +11,7 @@ def clientConnection(connectionSocket,id):
 
     def udpConnection():
         udpSocket = socket(AF_INET, SOCK_DGRAM)
-        mess = {"port": 4000, "interval": 2}
+        mess = {"port": int(newPort.get()), "interval": int(newInterval.get())}
         control = pickle.dumps(mess)
         # control = 'TCP_PORT 4000\nINTERVAL 2\n'
         udpSocket.sendto(control, ('localhost', UDP_Port))
