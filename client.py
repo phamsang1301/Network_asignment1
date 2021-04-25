@@ -111,8 +111,12 @@ def udpConnection():
         # serverPort = int(control.split()[1])
         # interval = int(control.split()[3])
         d = pickle.loads(control)
-        serverPort = d['port']
-        interval = d['interval']
+        if d['port'] == '':
+            interval = int(d['interval'])
+        else:
+            serverPort = int(d['port'])
+            interval = int(d['interval'])
+
         print('receive udp success 2')
         print('Interval in udp = ' + str(interval))
 
