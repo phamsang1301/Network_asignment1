@@ -63,17 +63,17 @@ def open_tcp_connection():
     msg = {'IP': "127.0.0.1", 'NAME': "Sang", 'UDP_PORT': 4001, 'TIME':timenow }
     message = pickle.dumps(msg)
     clientSocket.send(message)
-    # open_udp_connection()
     
 
     recive_msg_from_server = clientSocket.recv(
         2048)
     m2 =  pickle.loads(recive_msg_from_server)
+
     ## if success, sent computer info to server
     if (m2['STATUS'] == "Success"):
         interval = m2['INTERVAL']
         serverPort = m2['TCP_PORT']
-        
+    
         while(True):
             print(getInfo())
             send_infos = pickle.dumps(getInfo())
@@ -81,23 +81,13 @@ def open_tcp_connection():
             print("Sleep...")
             print('Interval in tcp = ' + str(interval))
             time.sleep(interval)
-
+    # if fail, sent again
+        ##  do
+        ##  something 
+        ##   here
            
 
     
-# def open_udp_connection():
-#     global interval
-#     udpSocket = socket(AF_INET, SOCK_DGRAM)
-#     # udpSocket.bind((serverName, 4001))
-#     while True:
-#         control, serverAddr = udpSocket.recvfrom(2048)
-#         print('Receive udp success')
-#         # ctrl = pickle.loads(control)
-#         serverPort = ctrl['TCP_PORT']
-#         interval = ctrl['INTERVAL']
-#         print('Changed parameter!')
-#         print('New Interval: ' + str(interval))
-#         print('ServerPort: ' + str(serverPort))
 
 
 def udpConnection():
@@ -130,9 +120,7 @@ newThread1  = Thread(target=udpConnection(), args=())
 newThread1.start()
 threads.append(newThread1)
 
-# if __name__ == "__main__":
-#     open_tcp_connection()
-#     open_udp_connection()
+
     
     
                 
