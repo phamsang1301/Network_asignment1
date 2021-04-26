@@ -2,7 +2,10 @@ from socket import socket, AF_INET, SOCK_STREAM, SOCK_DGRAM
 from threading import Thread
 import time
 import pickle
+from tkinter import messagebox  
 import tkinter as tk
+from tkinter import ttk
+
 
 
 
@@ -15,52 +18,110 @@ def clientConnection(connectionSocket,id):
         mess = {"port": newPort.get(), "interval": newInterval.get()}
         control = pickle.dumps(mess)
         udpSocket.sendto(control, ('localhost', UDP_Port))
-        
+
     # new thread to open UDP connection
     def newUDPThread():
-        newThread2 = Thread(target=udpConnection, args=())
-        newThread2.start()
-        #add UDP Thread into current client thread
-        clients.append(newThread2)
+        if (newInterval.get() == '' and newPort.get() == ''):
+            messagebox.showerror("Error","Para must not be empty!")
+        elif  newInterval.get() != '' and int(newInterval.get()) <= 0: 
+            messagebox.showerror("Error","Invalid value!")
+        elif newPort.get() != '' and int(newPort.get()) <= 0:
+            messagebox.showerror("Error","Invalid value!")
+        else:
+            messagebox.showinfo("Success", "Done!")
+            newThread2 = Thread(target=udpConnection, args=())
+            newThread2.start()
+            #add UDP Thread into current client thread
+            clients.append(newThread2)
 
     try:
         #Recive client's info
         message = connectionSocket.recv(
                 2048)
         #turn message into object
+# msg = {'IP': "127.0.0.1", 'NAME': "Sang", 'UDP_PORT': 4001, 'TIME':timenow }
+        # if 
         msg = pickle.loads(message)
+        
         UDP_Port = msg['UDP_PORT']
 
-        
+
         #Create overall labels for client
         newLabel = tk.Label(text='Client ' + str(id))
         labels.append(newLabel)
         newLabel.grid(row=0, column=id)
         
+        
+        
+        ### progress bar
+        cpu = ttk.Progressbar(
+            window,
+            orient='horizontal',
+            mode='determinate',
+            length=280,
+        )
+        
+        # place the progressbar
+        cpu.grid(column=id, row=1)
+        
+        cpu_label = tk.Label(text=f"CPU temperature: {cpu['value']}\N{Degree Celsius}")
+        cpu_label.grid(column=id, row=2)
+        
+        mem = ttk.Progressbar(
+            window,
+            orient='horizontal',
+            mode='determinate',
+            length=280,
+        )
+        mem.grid(column=id, row=3)
+        
+        mem_label = tk.Label(text=f"Memory percentage: {mem['value']}%")
+        mem_label.grid(column=id, row=4)
+
+        disk = ttk.Progressbar(
+            window,
+            orient='horizontal',
+            mode='determinate',
+            length=280,
+        )
+        disk.grid(column=id, row=5)
+        
+        disk_label = tk.Label(text=f"Disk percentage: {disk['value']}%")
+        disk_label.grid(column=id, row=6)
+      
+        cpus.append(cpu)
+        mems.append(mem)
+        disks.append(disk)
+        
+        cpuLabels.append(cpu_label)
+        memLabels.append(mem_label)
+        diskLabels.append(disk_label)
+        
         #label for new interval
         newLabelInterval = tk.Label(text='Interval')
         labelsInterval.append(newLabelInterval)
-        newLabelInterval.grid(row=1, column=id, sticky = 'w', pady = 2)
+        newLabelInterval.grid(row=7, column=id, sticky = 'w', pady = 2)
         
         #Textbox to for input new interval
         newInterval =tk.Entry(width=10)
         intervals.append(newInterval)
-        newInterval.grid(row=1, column=id)
+        newInterval.grid(row=7, column=id)
         
         #label for new interval
         newLabelPort = tk.Label(text='Port')
         labelsPort.append(newLabelPort)
-        newLabelPort.grid(row=2, column=id,sticky = 'w', pady = 2 )
+        newLabelPort.grid(row=8, column=id,sticky = 'w', pady = 2 )
    
         #Textbox to for input new interval        
         newPort =tk.Entry(width=10)
         ports.append(newPort)
-        newPort.grid(row=2, column=id)
+        newPort.grid(row=8, column=id)
         
         #Button to sent new interval and port
-        newButton = tk.Button(text="Sent",  command=newThread)
+        newButton = tk.Button(text="Send",  command=newUDPThread)
         buttons.append(newButton)
-        newButton.grid(row=3, column=id)
+        newButton.grid(row=9, column=id)
+        
         
         
         window.columnconfigure(id, weight=1)
@@ -99,9 +160,42 @@ def clientConnection(connectionSocket,id):
             labels[id]["text"] += "Available: " + str(inf['DISK']['Avaiable']) + '\n'
             labels[id]["text"] += "Use Percent: " + str(inf['DISK']['USED_PERCENT']) + '\n \n'
             labels[id]["text"] += '----------------------\n'
+            
+            cpus[id]['value'] = inf['CPU']
+            mems[id]['value'] = inf['MEMORY']['USED_PERCENT']
+            disks[id]['value'] = inf['DISK']['USED_PERCENT']
+
+            cpuLabels[id]['text'] = 'CPU temperature: ' + str(inf['CPU']) + '\N{Degree Celsius}'
+            memLabels[id]['text'] = 'Memory percentage: ' + str(inf['MEMORY']['USED_PERCENT']) + '%'     
+            diskLabels[id]['text'] = 'Disk percentage: ' + str(inf['DISK']['USED_PERCENT']) + '%'
+
+            # # label
+            # value_label = ttk.Label(text=f"Current Progress: {pb['value']}%")
+            # value_label.grid(column=id, row=5, columnspan=2)
+
+            # # start button
+            # start_button = ttk.Button(
+            #     window,
+            #     text='Progress',
+            #     command=progress
+            # )
+            # start_button.grid(column=id, row=6, padx=10, pady=10, sticky=tk.E)
+
+            # stop_button = ttk.Button(
+            #     window,
+            #     text='Stop',
+            #     command=stop
+            # )
+            # stop_button.grid(column=1, row=2, padx=10, pady=10, sticky=tk.W)      
+            # def progress():
+            #     if pb['value'] < 100:
+            #         pb['value'] += 20
+            #         value_label['text'] = f"Current Progress: {pb['value']}%"
+            #     else:
+            #         messagebox.showinfo(message='The progress completed!') 
     except:
         connectionSocket.close()
- 
+
 # open tcp connection
 def tcpConnection():
     global serverSocket, clients, labels, id
@@ -129,6 +223,15 @@ ports = []
 buttons  = []
 labelsInterval = []
 labelsPort  =  []
+
+cpus= []
+mems = []
+disks = []
+
+cpuLabels = []
+memLabels = []
+diskLabels = []
+
 id = 0
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverPort = 4000
@@ -140,6 +243,7 @@ threads.append(newThread)
 
 
 window = tk.Tk()
+window.title("Client Management")
 window.rowconfigure(0, weight=1)
 window.mainloop()
 

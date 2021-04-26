@@ -4,7 +4,7 @@ import datetime
 import time
 from threading import Thread
 import pickle
-import json
+import tkinter as tk
 
 # for sensor in temperature_infos:
 #     print(sensor)
@@ -103,6 +103,9 @@ def udpConnection():
         d = pickle.loads(control)
         if d['port'] == '':
             interval = int(d['interval'])
+        elif d['interval'] == '':
+            d['port'] = int(d['port'])
+        
         else:
             serverPort = int(d['port'])
             interval = int(d['interval'])
@@ -120,8 +123,12 @@ newThread1  = Thread(target=udpConnection(), args=())
 newThread1.start()
 threads.append(newThread1)
 
+window = tk.Tk()
+window.title("Client")
 
-    
+label = tk.Label(text="IP: ")
+
+window.mainloop()
     
                 
 

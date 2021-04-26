@@ -4,7 +4,6 @@ import datetime
 import time
 from threading import Thread
 import pickle
-import json
 
 # for sensor in temperature_infos:
 #     print(sensor)
@@ -63,7 +62,6 @@ def open_tcp_connection():
     msg = {'IP': "127.0.0.1", 'NAME': "Sang", 'UDP_PORT': 4002, 'TIME':timenow }
     message = pickle.dumps(msg)
     clientSocket.send(message)
-    # open_udp_connection()
     
 
     recive_msg_from_server = clientSocket.recv(
@@ -85,19 +83,6 @@ def open_tcp_connection():
             
     
     
-# def open_udp_connection():
-#     global interval
-#     udpSocket = socket(AF_INET, SOCK_DGRAM)
-#     # udpSocket.bind((serverName, 4001))
-#     while True:
-#         control, serverAddr = udpSocket.recvfrom(2048)
-#         print('Receive udp success')
-#         # ctrl = pickle.loads(control)
-#         serverPort = ctrl['TCP_PORT']
-#         interval = ctrl['INTERVAL']
-#         print('Changed parameter!')
-#         print('New Interval: ' + str(interval))
-#         print('ServerPort: ' + str(serverPort))
 
 
 def udpConnection():
@@ -111,9 +96,14 @@ def udpConnection():
         # serverPort = int(control.split()[1])
         # interval = int(control.split()[3])
         d = pickle.loads(control)
-        if d['port'] == True:
-            serverPort = d['port']
-        interval = d['interval']
+        if d['port'] == '':
+            interval = int(d['interval'])
+        elif d['interval'] == '':
+            d['port'] = int(d['port'])
+        
+        else:
+            serverPort = int(d['port'])
+            interval = int(d['interval'])
         print('receive udp success 2')
         print('Interval in udp = ' + str(interval))
 
@@ -127,9 +117,7 @@ newThread1  = Thread(target=udpConnection(), args=())
 newThread1.start()
 threads.append(newThread1)
 
-# if __name__ == "__main__":
-#     open_tcp_connection()
-#     open_udp_connection()
+
     
     
                 
