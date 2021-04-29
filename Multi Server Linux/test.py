@@ -8,14 +8,8 @@ from tkinter import messagebox
 
 
 
-serverName = ''
-registerPort = 3999
-dataPort = 0
-interval = 0
-count = 0
-threads = []
 clientSocket = socket(AF_INET, SOCK_STREAM)
-udpPort = 0
+
 
 def getInfo():    
     mem_total = psutil.virtual_memory().total / pow(2, 30)
@@ -176,30 +170,8 @@ def registerConnection():
         
 
     elif (reciveDatasocketStatus.split()[2] == 'open'):
-        
-        time.sleep(3)
         clientSocket.close()
-        clientSocket = socket(AF_INET, SOCK_STREAM)
-        clientSocket.connect((serverName, dataPort))
-        while True:
-            # info = 'Total = ' + str(psutil.virtual_memory().total / pow(2, 30))
-            # info += '\nUsed = ' + \
-            #     str(psutil.virtual_memory().used / pow(2, 30))
-            # info += '\nAvailable = ' + \
-            #     str(psutil.virtual_memory().available / pow(2, 30))
-            # info += '\nUsed Percent = ' + str(psutil.virtual_memory().percent)
-            # info += '\nHas been updated ' + str(count) + ' times\n'
-            # count += 1
-            
-            info = getInfo()
-            try:
-                clientSocket.send(info.encode())
-            except:
-                print("dataSocket close")
-                break
-            print("Sleep...")
-            print('interval in tcp = ' + str(interval))
-            time.sleep(interval)
+        sendData()
 
     # message3 = clientSocket.recv(2048).decode()
     # status = message3.split()[1]
@@ -213,7 +185,7 @@ def registerConnection():
 
 
 def udpConnection():
-    global serverName, registerPort, dataPort, udpPort, interval, clientSocket, count
+    global serverName, registerPort, dataPort, udpPort, interval, clientSocket, change
 
     udpSocket = socket(AF_INET, SOCK_DGRAM)
     udpSocket.bind(('', udpPort))
@@ -225,23 +197,23 @@ def udpConnection():
             #if true 
         print('receive udp success')
         control = control.decode()
+        if control != '':
+            if control.split()[2] == 'none':
+                interval = int(control.split()[4])
+            
+            elif control.split()[4] == 'none':
+                dataPort = int(control.split()[2])
+                sendData()
+            else:  
+                dataPort = int(control.split()[2])
+                interval = int(control.split()[4])
+                sendData() 
+            control = ''  
         
-        if control.split()[2] == '':
-            interval = int(control.split()[4])
-        elif control.split()[4] == '':
-            dataPort = int(control.split()[2])
-        
-        else:  
-            dataPort = int(control.split()[2])
-            interval = int(control.split()[4])
         print('dataPort ' + str(dataPort))
         print('interval in udp = ' + str(interval))
 
-        clientSocket.close()
-        
-        clientSocket = socket(AF_INET, SOCK_STREAM)
-        clientSocket.connect((serverName, dataPort))
-
+       
         # newThread = Thread(target=dataConnection, args=())
         # newThread.start()
         # threads[0] = newThread
@@ -263,11 +235,46 @@ def startClient():
     newThread2.start()
     threads.append(newThread2)
 
-
+def sendData():
+    global change
+    clientSocket = socket(AF_INET, SOCK_STREAM)
+    clientSocket.connect((serverName, dataPort))
+    while True:
+        # info = 'Total = ' + str(psutil.virtual_memory().total / pow(2, 30))
+        # info += '\nUsed = ' + \
+        #     str(psutil.virtual_memory().used / pow(2, 30))
+        # info += '\nAvailable = ' + \
+        #     str(psutil.virtual_memory().available / pow(2, 30))
+        # info += '\nUsed Percent = ' + str(psutil.virtual_memory().percent)
+        # info += '\nHas been updated ' + str(count) + ' times\n'
+        # count += 1
+        # if change == True:
+        #     clientSocket.close()
+        #     break
+        info = getInfo()
+        try:
+            clientSocket.send(info.encode())
+        except:
+            print("dataSocket close")
+        
+        print("Sleep...")
+        print('interval in tcp = ' + str(interval))
+        time.sleep(interval)
+    
 def setServerIp():
     global serverName
     serverName = serverIP.get()
     messagebox.showinfo("Success","Done!")
+
+change = False
+serverName = ''
+registerPort = 3999
+dataPort = 0
+interval = 0
+count = 0
+threads = []
+udpPort = 0
+
 
 window = tk.Tk()
 
