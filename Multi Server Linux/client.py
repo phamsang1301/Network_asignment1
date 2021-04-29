@@ -141,8 +141,15 @@ def udpConnection():
             #if true 
         print('receive udp success')
         control = control.decode()
-        dataPort = int(control.split()[2])
-        interval = int(control.split()[4])
+        
+        if control.split()[2] == '':
+            interval = int(control.split()[4])
+        elif control.split()[4] == '':
+            dataPort = int(control.split()[2])
+        
+        else:  
+            dataPort = int(control.split()[2])
+            interval = int(control.split()[4])
         print('dataPort ' + str(dataPort))
         print('interval in udp = ' + str(interval))
 
