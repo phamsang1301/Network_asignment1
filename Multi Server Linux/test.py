@@ -67,14 +67,13 @@ def dataConnection():
 
 def registerConnection():
     global serverName, registerPort, dataPort, interval, clientSocket, count
-    serverName = setServerIp()
     # clientSocket = socket(AF_INET, SOCK_STREAM)
     clientSocket.connect((serverName, registerPort))
     name = nameInput.get()
     ip = ipInput.get()
-    time = '{0:%Y-%m-%d %H:%M}'.format(datetime.datetime.now())
-    message = 'REGISTER\nNAME '+ name + '\nIP ' + ip+ '\nUDP_PORT ' + str(udpPort) + '\nTIME ' + \
-        str(time) + '\n'
+    time1 = '{0:%Y-%m-%d %H:%M}'.format(datetime.datetime.now())
+    message = 'REGISTER\nNAME '+ str(name) + '\nIP ' + ip + '\nUDP_PORT ' + str(udpPort) + '\nTIME ' + \
+        str(time1) + '\n'
     clientSocket.send(message.encode())
 
 
@@ -113,27 +112,27 @@ def registerConnection():
         clientSocket.close()
 
         #check wrong fields
-    elif (registerReturn.split()[0] != 'REGISTER-RETURN' or registerReturn.split()[0].isnumeric() == False):
+    elif (registerReturn.split()[0] != 'REGISTER-RETURN'):
         errorMessage = '102 Wrong Header'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
 
-    # elif (registerReturn.split()[2] != 'success' or registerReturn.split()[2] != 'fail')
-    #     errorMessage = '102 Wrong Status'
-    #     clientSocket.send(errorMessage.encode())
-    #     clientSocket.close()
+    elif (registerReturn.split()[2] != 'success' and registerReturn.split()[2] != 'fail'):
+        errorMessage = '102 Wrong Status'
+        clientSocket.send(errorMessage.encode())
+        clientSocket.close()
         
     elif (registerReturn.split()[4].isnumeric() == False):
         errorMessage = '102 Wrong ID'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
 
-    elif (int(registerReturn.split()[4]) <= 0):
+    elif (int(registerReturn.split()[6]) <= 0):
         errorMessage = '102 Invalid Interval'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
 
-    elif (int(registerReturn.split()[6]) <= 0 or int(registerReturn.split()[6]) > 65000):
+    elif (int(registerReturn.split()[8]) <= 0 or int(registerReturn.split()[6]) > 65000):
         errorMessage = '102 Invalid Data Port'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
@@ -145,12 +144,12 @@ def registerConnection():
         dataPort = int(registerReturn.split()[8])
         res = messagebox.askyesno('Request', 'Port: '+ str(dataPort) + '\nDo you want to connect to server?') 
         if res == True:
-            time.sleep(3)
             clientSocket.send('DATAPORT-RECEIVE-RETURN\nSTATUS accept'.encode())
         else:
-            time.sleep(3)
             clientSocket.send('DATAPORT-RECEIVE-RETURN\nSTATUS deni'.encode())
             clientSocket.close()
+    else:
+        clientSocket.close()
 
     # if False:
         ## sent error to server
@@ -176,9 +175,10 @@ def registerConnection():
         #missing header
         
 
-    elif (reciveDatasocketStatus.split()[2] == 'open' ):
-        clientSocket.close()
+    elif (reciveDatasocketStatus.split()[2] == 'open'):
+        
         time.sleep(3)
+        clientSocket.close()
         clientSocket = socket(AF_INET, SOCK_STREAM)
         clientSocket.connect((serverName, dataPort))
         while True:
@@ -238,9 +238,10 @@ def udpConnection():
         print('interval in udp = ' + str(interval))
 
         clientSocket.close()
+        
         clientSocket = socket(AF_INET, SOCK_STREAM)
         clientSocket.connect((serverName, dataPort))
-        
+
         # newThread = Thread(target=dataConnection, args=())
         # newThread.start()
         # threads[0] = newThread
@@ -264,11 +265,12 @@ def startClient():
 
 
 def setServerIp():
+    global serverName
     serverName = serverIP.get()
     messagebox.showinfo("Success","Done!")
-    return serverName
 
 window = tk.Tk()
+
 
 ipServerLabel = tk.Label(text='Server IP: ')
 ipServerLabel.pack()
@@ -276,7 +278,8 @@ ipServerLabel.pack()
 serverIP = tk.Entry()
 serverIP.pack()
 
-
+setIpButton = tk.Button(text="Apply", command=setServerIp)
+setIpButton.pack()
 udpLabel = tk.Label(text='UDP: ')
 udpLabel.pack()
 
