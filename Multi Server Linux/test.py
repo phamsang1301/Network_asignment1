@@ -9,6 +9,14 @@ from tkinter import messagebox
 
 
 clientSocket = socket(AF_INET, SOCK_STREAM)
+change = False
+
+serverName = ''
+registerPort = 3999
+dataPort = 0
+interval = 0
+threads = []
+udpPort = 0
 
 
 def getInfo():    
@@ -37,7 +45,7 @@ def getInfo():
 
 
 def dataConnection():
-    global serverName, registerPort, dataPort, interval, clientSocket, count
+    global serverName, registerPort, dataPort, interval, clientSocket
     
     while True:
         # info = 'Total = ' + str(psutil.virtual_memory().total / pow(2, 30))
@@ -60,7 +68,7 @@ def dataConnection():
 
 
 def registerConnection():
-    global serverName, registerPort, dataPort, interval, clientSocket, count
+    global serverName, registerPort, dataPort, interval, clientSocket
     # clientSocket = socket(AF_INET, SOCK_STREAM)
     clientSocket.connect((serverName, registerPort))
     name = nameInput.get()
@@ -81,53 +89,53 @@ def registerConnection():
 
         #check missing header
     elif (registerReturn.split()[0] == ''):
-        errorMessage = '101 Missing Header'
+        errorMessage = '201 Missing Header'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
 
     elif (registerReturn.split()[2] == ''):
-        errorMessage = '101 Missing Status'
+        errorMessage = '201 Missing Status'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
 
     elif (registerReturn.split()[4] == ''):
-        errorMessage = '101 Missing ID'
+        errorMessage = '201 Missing ID'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
 
     elif (registerReturn.split()[6] == ''):
-        errorMessage = '101 Missing Interval'
+        errorMessage = '201 Missing Interval'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
 
     elif (registerReturn.split()[8] == ''):
-        errorMessage = '101 Missing Data Port'
+        errorMessage = '201 Missing Data Port'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
 
         #check wrong fields
     elif (registerReturn.split()[0] != 'REGISTER-RETURN'):
-        errorMessage = '102 Wrong Header'
+        errorMessage = '202 Wrong Header'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
 
     elif (registerReturn.split()[2] != 'success' and registerReturn.split()[2] != 'fail'):
-        errorMessage = '102 Wrong Status'
+        errorMessage = '202 Wrong Status'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
         
     elif (registerReturn.split()[4].isnumeric() == False):
-        errorMessage = '102 Wrong ID'
+        errorMessage = '202 Wrong ID'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
 
     elif (int(registerReturn.split()[6]) <= 0):
-        errorMessage = '102 Invalid Interval'
+        errorMessage = '202 Invalid Interval'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
 
     elif (int(registerReturn.split()[8]) <= 0 or int(registerReturn.split()[6]) > 65000):
-        errorMessage = '102 Invalid Data Port'
+        errorMessage = '202 Invalid Data Port'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
     # if success
@@ -145,7 +153,6 @@ def registerConnection():
     else:
         clientSocket.close()
 
-    # if False:
         ## sent error to server
         #display wrong protocol.
         # close socket 
@@ -167,8 +174,14 @@ def registerConnection():
         clientSocket.close()
 
         #missing header
-        
-
+    elif (reciveDatasocketStatus.split()[0] == ''):
+        messagebox.showerror("Error", "401 Missing Header")
+    elif (reciveDatasocketStatus.split()[2] == ''):
+        messagebox.showerror("Error", "401 Missing Status")
+    elif (reciveDatasocketStatus.split()[0]) != 'DATASOCKET-STATUS':
+        messagebox.showerror("Error", "402 Wrong Header")
+    elif (reciveDatasocketStatus.split()[2]) != 'open':
+        messagebox.showerror("Error", "402 Wrong Status")
     elif (reciveDatasocketStatus.split()[2] == 'open'):
         clientSocket.close()
         sendData()
@@ -193,25 +206,42 @@ def udpConnection():
         control, serverAddr = udpSocket.recvfrom(2048)
         #check protocol CHANGE-DATAPORT
             #If fail send error to clent (SEND-ERROR-UDP)
-            
-            #if true 
+            #if true
+        
         print('receive udp success')
         control = control.decode()
-        if control != '':
-            if control.split()[2] == 'none':
-                interval = int(control.split()[4])
-            
-            elif control.split()[4] == 'none':
-                dataPort = int(control.split()[2])
-                sendData()
-            else:  
-                dataPort = int(control.split()[2])
-                interval = int(control.split()[4])
-                sendData() 
-            control = ''  
-        
-        print('dataPort ' + str(dataPort))
-        print('interval in udp = ' + str(interval))
+        result = control.split()
+        if (result[0] != 'CHANGE-INTERVAL' and result[0] != 'CHANGE-DATAPORT'):
+            # udpSocket.sendto('501 Missing Header'.encode(),(serverName, 8000))
+            messagebox.showerror("Error", " 501 Missing Header")
+        elif (result[0] == 'CHANGE-INTERVAL'):
+            if (result[2] == ''):
+                # udpSocket.sendto('501 Missing Interval'.encode(),(serverName, 8000))
+                messagebox.showerror("Error", " 501 Missing Interval")
+            elif (int(result[2]) <= 0):
+                # udpSocket.sendto('502 Wrong Interval'.encode(),(serverName, 8000))
+                messagebox.showerror("Error", " 502 Wrong Interval")
+            else:
+                interval = int(result[2])
+        elif (result[0] == 'CHANGE-DATAPORT'):
+            if (result[2] == ''):
+                # udpSocket.sendto('501 Missing Data Port'.encode(),(serverName, 8000))
+                messagebox.showerror("Error", " 501 Missing Data Port")
+            elif (int(result[2]) <= 0 or int(result[2]) > 65000 ):
+                # udpSocket.sendto('501 Wrong Data Port'.encode(),(serverName, 8000))
+                messagebox.showerror("Error", " 502 Wrong Data Port")
+            else:
+                
+                # udpSocket.sendto('STATUS success'.encode(),(serverName, 8000))
+                change = True
+                dataPort = int(result[2])
+                time.sleep(5)
+                print('new DataPort ' + str(dataPort))
+                print('interval in udp = ' + str(interval))
+                # sendData()
+                sendDataThread = Thread(target=sendData(), args=())
+                sendDataThread.start()
+
 
        
         # newThread = Thread(target=dataConnection, args=())
@@ -220,7 +250,6 @@ def udpConnection():
         # while True:
         #     clientSocket.send("hello".encode())
         #     time.sleep(3)
-
 
 def startClient():
     global udpPort, udpPortEntry
@@ -252,6 +281,10 @@ def sendData():
         #     clientSocket.close()
         #     break
         info = getInfo()
+        if change == True:
+            clientSocket.close
+            change = False
+            break;
         try:
             clientSocket.send(info.encode())
         except:
@@ -265,15 +298,6 @@ def setServerIp():
     global serverName
     serverName = serverIP.get()
     messagebox.showinfo("Success","Done!")
-
-change = False
-serverName = ''
-registerPort = 3999
-dataPort = 0
-interval = 0
-count = 0
-threads = []
-udpPort = 0
 
 
 window = tk.Tk()
