@@ -212,35 +212,31 @@ def udpConnection():
         control = control.decode()
         result = control.split()
         if (result[0] != 'CHANGE-INTERVAL' and result[0] != 'CHANGE-DATAPORT'):
-            # udpSocket.sendto('501 Missing Header'.encode(),(serverName, 8000))
-            messagebox.showerror("Error", " 501 Missing Header")
+            messagebox.showerror("Error", " 503 Wrong Header")
+        if (result[0] != ''):
+            messagebox.showerror("Error", " 500 Missing Header")
         elif (result[0] == 'CHANGE-INTERVAL'):
             if (result[2] == ''):
-                # udpSocket.sendto('501 Missing Interval'.encode(),(serverName, 8000))
                 messagebox.showerror("Error", " 501 Missing Interval")
             elif (int(result[2]) <= 0):
-                # udpSocket.sendto('502 Wrong Interval'.encode(),(serverName, 8000))
-                messagebox.showerror("Error", " 502 Wrong Interval")
+                messagebox.showerror("Error", " 504 Invalid Interval")
             else:
                 interval = int(result[2])
         elif (result[0] == 'CHANGE-DATAPORT'):
             if (result[2] == ''):
-                # udpSocket.sendto('501 Missing Data Port'.encode(),(serverName, 8000))
-                messagebox.showerror("Error", " 501 Missing Data Port")
+                messagebox.showerror("Error", " 502 Missing Data Port")
             elif (int(result[2]) <= 0 or int(result[2]) > 65000 ):
-                # udpSocket.sendto('501 Wrong Data Port'.encode(),(serverName, 8000))
-                messagebox.showerror("Error", " 502 Wrong Data Port")
+                messagebox.showerror("Error", " 505 Invalid Data Port")
             else:
                 
-                # udpSocket.sendto('STATUS success'.encode(),(serverName, 8000))
                 change = True
                 dataPort = int(result[2])
                 time.sleep(5)
                 print('new DataPort ' + str(dataPort))
                 print('interval in udp = ' + str(interval))
-                # sendData()
-                sendDataThread = Thread(target=sendData(), args=())
-                sendDataThread.start()
+                sendData()
+                # sendDataThread = Thread(target=sendData(), args=())
+                # sendDataThread.start()
 
 
        
@@ -280,12 +276,13 @@ def sendData():
         # if change == True:
         #     clientSocket.close()
         #     break
-        info = getInfo()
         if change == True:
             clientSocket.close
             change = False
             break;
         try:
+            info = getInfo()
+
             clientSocket.send(info.encode())
         except:
             print("dataSocket close")
