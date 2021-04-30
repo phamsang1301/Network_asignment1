@@ -25,11 +25,10 @@ def getInfo():
     mem_avail = round(psutil.virtual_memory().available / pow(2, 30),1)
     mem_percent = psutil.virtual_memory()[2] 
     cDisk = psutil.disk_usage('/')[0]
-    dDisk = psutil.disk_usage('/media/sangpham/Goodboy')[0]
-    total = round(((cDisk + dDisk) / pow(2,30)),1)
-    used = round(((psutil.disk_usage('/')[1] + psutil.disk_usage('/media/sangpham/Goodboy')[1])/ pow(2, 30)),1)
+    total = round(((cDisk ) / pow(2,30)),1)
+    used = round(((psutil.disk_usage('/')[1])/ pow(2, 30)),1)
     
-    available = round(((psutil.disk_usage('/')[2] + psutil.disk_usage('/media/sangpham/Goodboy')[2])/ pow(2, 30)),1)
+    available = round(((psutil.disk_usage('/')[2])/ pow(2, 30)),1)
 
     used_percent = round(((used / total) * 100),1)
 
@@ -126,7 +125,7 @@ def registerConnection():
         errorMessage = '208 Invalid Interval'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
-    elif (int(registerReturn.split()[8]) <= 0 or int(registerReturn.split()[6]) > 65000):
+    elif (int(registerReturn.split()[8]) <= 1023 or int(registerReturn.split()[6]) > 65535):
         errorMessage = '209 Invalid Data Port'
         clientSocket.send(errorMessage.encode())
         clientSocket.close()
@@ -139,9 +138,9 @@ def registerConnection():
         dataPort = int(registerReturn.split()[8])
         res = messagebox.askyesno('Request', 'Port: '+ str(dataPort) + '\nDo you want to connect to server?') 
         if res == True:
-            clientSocket.send('DATAPORT-REPLY\nSTATUS accept'.encode())
+            clientSocket.send('DATAPORT\nSTATUS accept'.encode())
         else:
-            clientSocket.send('DATAPORT-REPLY\nSTATUS deny'.encode())
+            clientSocket.send('DATAPORT\nSTATUS deny'.encode())
             clientSocket.close()
             window.quit()
     else:
@@ -173,7 +172,7 @@ def registerConnection():
     elif (reciveDatasocketStatus.split()[2] == ''):
         window.quit()
         messagebox.showerror("Error", "401 Missing Status")
-    elif (reciveDatasocketStatus.split()[0]) != 'DATASOCKET-STATUS':
+    elif (reciveDatasocketStatus.split()[0]) != 'DATAPORT-REPLY':
         messagebox.showerror("Error", "402 Wrong Header")
     elif (reciveDatasocketStatus.split()[2]) != 'open':
         messagebox.showerror("Error", "403 Wrong Status")
@@ -222,7 +221,7 @@ def udpConnection():
         elif (result[0] == 'CHANGE-DATAPORT'):
             if (result[2] == ''):
                 messagebox.showerror("Error", " 502 Missing Data Port")
-            elif (int(result[2]) <= 0 or int(result[2]) > 65000 ):
+            elif (int(result[2]) <= 1023 or int(result[2]) > 65535 ):
                 messagebox.showerror("Error", " 505 Invalid Data Port")
             else:
                 
