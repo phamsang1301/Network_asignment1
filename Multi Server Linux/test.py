@@ -9,7 +9,7 @@ from tkinter import messagebox
 
 
 clientSocket = socket(AF_INET, SOCK_STREAM)
-change = False
+# change = False
 
 serverName = ''
 registerPort = 3999
@@ -184,6 +184,8 @@ def registerConnection():
         messagebox.showerror("Error", "402 Wrong Status")
     elif (reciveDatasocketStatus.split()[2] == 'open'):
         clientSocket.close()
+        clientSocket = socket(AF_INET, SOCK_STREAM)
+        clientSocket.connect((serverName, dataPort))
         sendData()
 
     # message3 = clientSocket.recv(2048).decode()
@@ -229,16 +231,21 @@ def udpConnection():
                 messagebox.showerror("Error", " 505 Invalid Data Port")
             else:
                 
-                change = True
-                dataPort = int(result[2])
-                time.sleep(5)
-                print('new DataPort ' + str(dataPort))
-                print('interval in udp = ' + str(interval))
-                sendData()
+                # change = True
+                # dataPort = int(result[2])
+                # time.sleep(5)
+                # print('new DataPort ' + str(dataPort))
+                # print('interval in udp = ' + str(interval))
+                # sendData()
                 # sendDataThread = Thread(target=sendData(), args=())
                 # sendDataThread.start()
 
-
+                dataPort = int(result[2])
+                print('new DataPort ' + str(dataPort))
+                print('interval in udp = ' + str(interval))
+                clientSocket.close()
+                clientSocket = socket(AF_INET, SOCK_STREAM)
+                clientSocket.connect((serverName, dataPort))
        
         # newThread = Thread(target=dataConnection, args=())
         # newThread.start()
@@ -261,9 +268,9 @@ def startClient():
     threads.append(newThread2)
 
 def sendData():
-    global change
-    clientSocket = socket(AF_INET, SOCK_STREAM)
-    clientSocket.connect((serverName, dataPort))
+    # global change
+    # clientSocket = socket(AF_INET, SOCK_STREAM)
+    # clientSocket.connect((serverName, dataPort))
     while True:
         # info = 'Total = ' + str(psutil.virtual_memory().total / pow(2, 30))
         # info += '\nUsed = ' + \
@@ -282,9 +289,9 @@ def sendData():
             break;
         try:
             info = getInfo()
-
             clientSocket.send(info.encode())
         except:
+            clientSocket.close()
             print("dataSocket close")
         
         print("Sleep...")
